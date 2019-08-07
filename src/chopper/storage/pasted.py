@@ -1,7 +1,8 @@
 import re
+from html.parser import HTMLParser
+
 import requests
 
-from html.parser import HTMLParser
 from .generic import ChunkStorage
 
 
@@ -11,9 +12,16 @@ class PastedStorage(ChunkStorage):
     DOMAIN = "pasted.co"
     WEBSITE = "{}://{}".format(PROTOCOL, DOMAIN)
 
+    REGEX_URL = r'^{}/([a-zA-Z0-9]+)$'.format(WEBSITE)
+    REGEX_URL_UPLOAD = r'<input\s+.*value=[\'"]*({}/[a-z0-9]+)[\'"]*.*>'.format(
+        WEBSITE)
+    REGEX_TIMESTAMP = r'<input\s+.*\s+name=[\'"]*timestamp[\'"]*.*value=[\'"]*([a-z0-9]+)[\'"]*>'
+    REGEX_PASTE_HASH = r'{}/[a-z0-9]+/fullscreen\.php\?hash=([a-z0-9]+)'.format(
+        WEBSITE)
+
     @staticmethod
     def is_supporting(uri):
-        return re.search(r'^{}/[a-zA-Z0-9]+$'.format(PastedStorage.WEBSITE), uri) is not None
+        return re.search(PastedStorage.REGEX_URL, uri) is not None
 
     @staticmethod
     def max_chunk_size():
@@ -21,59 +29,55 @@ class PastedStorage(ChunkStorage):
 
     @staticmethod
     def upload(content):
-        timestamp = None
-        r = requests.get(PastedStorage.WEBSITE)
-        # with open('timestamp.html', 'w') as fname:
-        #     fname.write(r.text)
-        timestamp_match = re.search(
-            r'<input\s+.*\s+name=[\'"]*timestamp[\'"]*.*value=[\'"]*([a-z0-9]+)[\'"]*>', r.text)
-        if timestamp_match is None:
+        request = requests.get(PastedStorage.WEBSITE)
+        request_timestamp_r = re.search(
+            PastedStorage.REGEX_TIMESTAMP, request.text)
+        if request_timestamp_r is None:
             print('Timestamp not found')
             return None
-        timestamp = timestamp_match.group(1)
-        # print ('timestamp is {}'.format(timestamp))
-        h = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Referer': PastedStorage.WEBSITE,
-            'Accept-Encoding': 'gzip, deflate',
-        }
-        d = {
-            'antispam': '1',
-            'paste_title': 'test',
-            'input_text': content,
-            'timestamp': timestamp,
-            # 'paste_password': 'test',
-            'code': '0',
-        }
-        r = requests.post(
-            '{}/index.php?act=submit'.format(PastedStorage.WEBSITE), data=d, headers=h)
-        print('Request {} status code: {}'.format(r.url, r.status_code))
-        # with open('id.html', 'w') as fname:
-        #     fname.write(r.text)
+
+        request = requests.post(
+            '{}/index.php?act=submit'.format(PastedStorage.WEBSITE), data={
+                'antispam': '1',
+                'paste_title': 'test',
+                'input_text': content,
+                'timestamp': request_timestamp_r.group(1),
+                'code': '0',
+                # 'paste_password': '',
+            }, headers={
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Referer': PastedStorage.WEBSITE,
+                'Accept-Encoding': 'gzip, deflate',
+            }
+        )
         response_match = re.search(
-            r'<input\s+.*value=[\'"]*({}/[a-z0-9]+)[\'"]*.*>'.format(PastedStorage.WEBSITE), r.text)
+            PastedStorage.REGEX_URL_UPLOAD, request.text)
         if response_match is None:
             print('Paste ID not found')
             return None
+
         return response_match.group(1)
 
     @staticmethod
     def download(uri):
-        id_match = re.search(
-            r'{}/([a-z0-9]+)'.format(PastedStorage.WEBSITE), uri)
-        if id_match is None:
+        uri_r = re.search(PastedStorage.REGEX_URL, uri)
+        if uri_r is None:
+            print('Paste URI unrecognized')
             return
-        r = requests.get(uri)
-        hash_match = re.search(
-            r'{}/[a-z0-9]+/fullscreen\.php\?hash=([a-z0-9]+)'.format(PastedStorage.WEBSITE), r.text)
-        if hash_match is None:
-            print('Paste Hash not found')
+
+        request = requests.get(uri)
+        request_hash_r = re.search(
+            PastedStorage.REGEX_PASTE_HASH, request.text)
+        if request_hash_r is None:
+            print('Paste hash not found')
             return None
-        r = requests.get('{}/{}/fullscreen.php?hash={}'.format(
-            PastedStorage.WEBSITE, id_match.group(1), hash_match.group(1)))
+
+        request = requests.get('{}/{}/fullscreen.php?hash={}'.format(
+            PastedStorage.WEBSITE, uri_r.group(1), request_hash_r.group(1)))
         p = PastedChunkParser()
-        p.feed(r.text)
+        p.feed(request.text)
         p.close()
+
         return p.paste_value.encode()
 
 
