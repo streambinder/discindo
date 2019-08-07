@@ -23,13 +23,16 @@ class StorageProvider():
             return StorageProvider.providers
 
         StorageProvider.providers = list()
-
-        providers_path = '{}/storage'.format(
-            os.path.dirname(os.path.realpath(__file__)))
-        for f in listdir(providers_path):
-            if re.search(r'^(?!__).*\.py$', f) is not None:
-                importlib.import_module(
-                    'chopper.storage.{}'.format(f.replace('.py', '')))
+        
+        try:
+            providers_path = '{}/storage'.format(
+                os.path.dirname(os.path.realpath(__file__)))
+            for f in listdir(providers_path):
+                if re.search(r'^(?!__).*\.py$', f) is not None:
+                    importlib.import_module(
+                        'chopper.storage.{}'.format(f.replace('.py', '')))
+        except:
+            pass
         StorageProvider.providers = ChunkStorage.__subclasses__()
         return StorageProvider.providers
 
