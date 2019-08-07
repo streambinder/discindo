@@ -1,6 +1,3 @@
-#!/bin/env python3
-
-
 class abstatic(staticmethod):
     __slots__ = ()
 

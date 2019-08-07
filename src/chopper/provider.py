@@ -1,5 +1,3 @@
-#!/bin/env python3
-
 import abc
 import importlib
 import json
@@ -7,12 +5,11 @@ import os
 import pkgutil
 import random
 import re
+import requests
 import sys
+
 from os import listdir
 from os.path import isfile, join
-
-import requests
-
 from .storage.generic import ChunkStorage
 
 
