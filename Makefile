@@ -23,7 +23,8 @@ c: prepare
 prepare:
 	@ ( \
 		mkdir -p $(BIN); \
-		find src/chopper -type f -name \*.py -not -name __init__.py -exec cat {} > $(PYXFILE) \; ; \
+		find src/chopper -maxdepth 1 -type f -name \*.py -not -name __init__.py -exec cat {} > $(PYXFILE) \; ; \
+		find src/chopper/providers -type f -name \*.py -not -name __init__.py -exec cat {} >> $(PYXFILE) \; ; \
 		cat src/main.py >> $(PYXFILE); \
 		sed -i '/^from\ \./d; /^from\ chopper/g' $(PYXFILE); \
 	);
