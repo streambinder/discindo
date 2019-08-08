@@ -29,7 +29,7 @@ class Command():
         chunk = knife.chop(provider.max_chunk_size())
         while chunk is not None:
             print('Uploading chunk {} using {} provider...'.format(
-                len(chunks_uris)+1, provider.nice_name()))
+                len(chunks_uris)+1, provider.nice_name()), end='\r')
             chunks_uris.append(provider.upload(chunk))
             provider = Storage.random_provider()
             chunk = knife.chop(provider.max_chunk_size())
@@ -57,7 +57,7 @@ class Command():
         for uri in c.chunks:
             provider = Storage.get_provider(uri)
             print('Downloading chunk {} using {} provider...'.format(
-                len(chunk_data)+1, provider.nice_name()))
+                len(chunk_data)+1, provider.nice_name()), end='\r')
             chunk_data.append(provider.download(uri))
         print('Rebuilt original file into: {} ({})'.format(
             c.filename, Command._nice_size_filename(c.filename)))
