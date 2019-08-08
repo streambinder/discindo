@@ -59,6 +59,7 @@ class Command():
             print('Downloading chunk {} using {} provider...'.format(
                 len(chunk_data)+1, provider.nice_name()), end='\r')
             chunk_data.append(provider.download(uri))
+        Knife.merge(chunk_data, c.filename)
         print('Rebuilt original file into: {} ({})'.format(
             c.filename, Command._nice_size_filename(c.filename)))
 
