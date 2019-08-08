@@ -3,8 +3,8 @@
 import argparse
 import hashlib
 
-from chopper.provider import StorageProvider
-from chopper.chop import Chop, Knife
+from chopper.chop import Knife, Manifest
+from chopper.storage import Storage
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--reconstruct',
@@ -16,7 +16,7 @@ if not args.reconstruct:
     knife = Knife(args.filename)
     print('Chopping file: {}'.format(args.filename))
 
-    provider = StorageProvider.random_provider()
+    provider = Storage.random_provider()
     print('Provider chosen: {}'.format(provider))
 
     chunks_uris = []
@@ -30,12 +30,12 @@ if not args.reconstruct:
         chunk = knife.chop(provider.max_chunk_size())
     print('Uploaded all chunks: {}'.format(len(chunks_uris)))
 
-    c = Chop(chunks_uris, args.filename)
+    c = Manifest(chunks_uris, args.filename)
     print('Creating chop file: {}'.format(c.filename_chop()))
     c.persist()
 else:
     print('Reading chop file: {}'.format(args.filename))
-    c = Chop.unpersist(args.filename)
-    Knife.merge([StorageProvider.get_provider(uri).download(uri)
+    c = Manifest.unpersist(args.filename)
+    Knife.merge([Storage.get_provider(uri).download(uri)
                  for uri in c.chunks], c.filename)
     print('Merged chunks into file: {}'.format(c.filename))

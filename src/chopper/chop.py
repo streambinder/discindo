@@ -24,14 +24,16 @@ class Knife():
                 fname.write(base64.b64decode(chunk))
 
 
-class Chop():
+class Manifest():
+
+    EXTENSION = 'chop'
 
     def __init__(self, chunks, filename):
         self.chunks = chunks
         self.filename = filename
 
     def filename_chop(self):
-        return '{}.chop'.format(os.path.splitext(self.filename)[0])
+        return '{}.{}'.format(os.path.splitext(self.filename)[0], Manifest.EXTENSION)
 
     def serialize(self):
         return base64.b64encode(json.dumps(self.__dict__).encode('utf'))
@@ -42,10 +44,10 @@ class Chop():
 
     @staticmethod
     def deserialize(payload):
-        return Chop(**json.loads(base64.b64decode(payload.decode())))
+        return Manifest(**json.loads(base64.b64decode(payload.decode())))
 
     @staticmethod
     def unpersist(filename):
         with open(filename, 'rb') as payload:
-            return Chop.deserialize(payload.read())
+            return Manifest.deserialize(payload.read())
         return None
