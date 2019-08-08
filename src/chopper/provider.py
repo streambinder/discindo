@@ -7,6 +7,10 @@ from .annotations import abstatic
 class Provider(abc.ABC):
 
     @abstatic
+    def nice_name():
+        return None
+
+    @abstatic
     def is_supporting(uri):
         return False
 

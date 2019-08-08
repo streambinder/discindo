@@ -19,15 +19,15 @@ class Pasted(Provider):
     REGEX_PASTE_HASH = r'{}/[a-z0-9]+/fullscreen\.php\?hash=([a-z0-9]+)'.format(
         WEBSITE)
 
-    @staticmethod
+    def nice_name():
+        return Pasted.DOMAIN
+
     def is_supporting(uri):
         return re.search(Pasted.REGEX_URL, uri) is not None
 
-    @staticmethod
     def max_chunk_size():
         return 512
 
-    @staticmethod
     def upload(content):
         request = requests.get(Pasted.WEBSITE)
         request_timestamp_r = re.search(
@@ -58,7 +58,6 @@ class Pasted(Provider):
 
         return response_match.group(1)
 
-    @staticmethod
     def download(uri):
         uri_r = re.search(Pasted.REGEX_URL, uri)
         if uri_r is None:
