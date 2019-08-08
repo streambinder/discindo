@@ -42,7 +42,7 @@ class Command():
     def glue():
         parser = Command.args_parser()
         parser.add_argument(
-            'filename', help='Generate chop for this file', type=str)
+            'filename', help='Rebuild file using this chop file', type=str)
         args = parser.parse_args()
         print('Reading chop file: {}'.format(args.filename))
         c = Manifest.unpersist(args.filename)
