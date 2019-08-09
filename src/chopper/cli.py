@@ -73,4 +73,4 @@ class Command():
         val = value / math.pow(1024, magnitude)
         if magnitude > 7:
             return '{:.1f}{}{}'.format(val, 'Yi', suffix)
-        return '{:3.1f}{}{}'.format(val, ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi'][magnitude], suffix)
+        return '{:3.1f}{}{}'.format(val, ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'][magnitude], suffix)
