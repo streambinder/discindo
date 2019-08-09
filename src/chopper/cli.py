@@ -33,8 +33,8 @@ class Command():
             chunk_uri = provider.upload(chunk)
             provider = Storage.random_provider()
             if chunk_uri is None:
-                print('Unable to upload chunk. Retrying with {} provider...'.format(
-                    provider.nice_name()))
+                print('Unable to upload chunk: retrying')
+                continue
             chunks_uris.append(chunk_uri)
             chunk = knife.chop(provider.max_chunk_size())
         print('Uploaded {} chunks.'.format(len(chunks_uris)))
