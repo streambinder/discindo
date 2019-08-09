@@ -30,8 +30,12 @@ class Command():
         while chunk is not None:
             print('Uploading chunk {} using {} provider...'.format(
                 len(chunks_uris)+1, provider.nice_name()), end='\r')
-            chunks_uris.append(provider.upload(chunk))
+            chunk_uri = provider.upload(chunk)
             provider = Storage.random_provider()
+            if chunk_uri is None:
+                print('Unable to upload chunk. Retrying with {} provider...'.format(
+                    provider.nice_name()))
+            chunks_uris.append(chunk_uri)
             chunk = knife.chop(provider.max_chunk_size())
         print('Uploaded {} chunks.'.format(len(chunks_uris)))
 
