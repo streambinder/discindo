@@ -1,14 +1,17 @@
+NAME := chopper
 BIN := bin
-BINFILE := $(BIN)/chopper
-PYXFILE := $(BIN)/chopper.pyx
-CFILE := $(BIN)/chopper.c
+BINARY_INSTALL_PATH := /usr/local/sbin
+BINARY_INSTALL := $(BINARY_INSTALL_PATH)/$(NAME)
+BINFILE := $(BIN)/$(NAME)
+PYXFILE := $(BIN)/$(NAME).pyx
+CFILE := $(BIN)/$(NAME).c
 CFLAGS := -Os -I /usr/include/python3.6m -lpython3.6m -lpthread -lm -lutil -ldl
 
 .PHONY: all
-all: binary
+all: bin
 
-.PHONY: binary
-binary: c
+.PHONY: bin
+bin: c
 	@ ( \
 		gcc $(CFLAGS) -o $(BINFILE) $(CFILE); \
 	);
@@ -27,6 +30,13 @@ prepare:
 		find src/chopper/providers -type f -name \*.py -not -name __init__.py -exec cat {} >> $(PYXFILE) \; ; \
 		cat src/main.py >> $(PYXFILE); \
 		sed -i '/^from\ \./d; /^from\ chopper/g' $(PYXFILE); \
+	);
+
+.PHONY: install
+install: bin
+	@ ( \
+		(test -d $(BINARY_INSTALL_PATH) || install -D -d -m 00755 $(BINARY_INSTALL_PATH)) && \
+		install -m 00755 $(BINFILE) $(BINARY_INSTALL_PATH)/; \
 	);
 
 .PHONY: clean
