@@ -1,5 +1,6 @@
 import base64
 import json
+import math
 import os
 
 
@@ -12,8 +13,12 @@ class Knife():
 
     def chop(self, size):
         size *= 1024
+        # the following calculation depends on encoding algorithm
+        # base85 encoding always returns a payload which is 5 to 4
+        # in proportion with the original payload
+        size = math.floor(size / 5 * 4)
         self.source.seek(self.source_offset)
-        chunk = base64.b64encode(self.source.read(size))
+        chunk = base64.b85encode(self.source.read(size))
         self.source_offset += size
         return chunk if chunk != b'' else None
 
@@ -21,7 +26,7 @@ class Knife():
     def merge(chunks, filename):
         with open(filename, 'wb+') as fname:
             for chunk in chunks:
-                fname.write(base64.b64decode(chunk))
+                fname.write(base64.b85decode(chunk))
 
 
 class Manifest():
