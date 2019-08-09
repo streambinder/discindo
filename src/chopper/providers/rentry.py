@@ -55,6 +55,8 @@ class Rentry(Provider):
             }
         )
 
+        if request.status_code != 200:
+            return None
         return request.url
 
     @staticmethod
