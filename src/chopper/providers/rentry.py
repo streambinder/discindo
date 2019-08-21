@@ -12,7 +12,6 @@ class Rentry(Provider):
     PROTOCOL = "https"
     DOMAIN = "rentry.co"
     WEBSITE = "{}://{}".format(PROTOCOL, DOMAIN)
-    TROTTLING = 30  # in seconds
     REGEX_URL = r'^{}/([a-zA-Z0-9]+)$'.format(WEBSITE)
     REGEX_CSRF = r'<input\s+.*\s+name=[\'"]*csrfmiddlewaretoken[\'"]*.*value=[\'"]*([a-zA-Z0-9]+)[\'"]*.*>'
     REGEX_HITLIMIT = r'<.*-error.*You have hit the limit, please wait a bit.*>'
