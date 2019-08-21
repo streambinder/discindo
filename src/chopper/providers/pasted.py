@@ -31,6 +31,10 @@ class Pasted(Provider):
         return 512
 
     @staticmethod
+    def trottle():
+        return 0
+
+    @staticmethod
     def upload(content):
         request = requests.get(Pasted.WEBSITE)
         request_timestamp_r = re.search(

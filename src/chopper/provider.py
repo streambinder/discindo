@@ -16,7 +16,11 @@ class Provider(abc.ABC):
 
     @abstatic
     def max_chunk_size():
-        return 0
+        return 0 # kbyte(s)
+    
+    @abstatic
+    def trottle():
+        return 0 # second(s)
 
     @abstatic
     def upload(content):
@@ -25,3 +29,6 @@ class Provider(abc.ABC):
     @abstatic
     def download(uri):
         return None
+
+class TrottlingException(Exception):
+    pass

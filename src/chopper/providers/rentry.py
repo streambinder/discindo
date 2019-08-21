@@ -4,7 +4,7 @@ from html.parser import HTMLParser
 
 import requests
 
-from ..provider import Provider
+from ..provider import Provider, TrottlingException
 
 
 class Rentry(Provider):
@@ -28,6 +28,10 @@ class Rentry(Provider):
     @staticmethod
     def max_chunk_size():
         return 128
+
+    @staticmethod
+    def trottle():
+        return 30
 
     @staticmethod
     def upload(content):
@@ -59,9 +63,7 @@ class Rentry(Provider):
         if request.status_code != 200:
             return None
         elif re.search(Rentry.REGEX_HITLIMIT, request.text) is not None:
-            print('Rate limit hit')
-            time.sleep(Rentry.TROTTLING)
-            return Rentry.upload(content)
+            raise TrottlingException()
 
         return request.url
 
