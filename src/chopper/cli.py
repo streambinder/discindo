@@ -26,8 +26,8 @@ class Command():
             args.filename, Command._nice_size_filename(args.filename)))
         knife = Knife(args.filename)
 
-        chunks_uris = []
         bytes_uploaded = 0
+        chunks = []
         provider_trottling = dict()
         while True:
             provider = Storage.random_provider()
@@ -41,23 +41,28 @@ class Command():
                 break
 
             print('[{}] Uploading chunk {} using {} provider...'.format(Command._nice_size_value(bytes_uploaded + provider.max_chunk_size()),
-                                                                        len(chunks_uris)+1, provider.nice_name()), end='\r')
+                                                                        len(chunks)+1, provider.nice_name()), end='\r')
 
             try:
                 chunk_uri = provider.upload(chunk)
                 if chunk_uri is None:
                     print('Unable to upload chunk: retrying...')
                     continue
-                chunks_uris.append(chunk_uri)
+                chunks.append(
+                    {
+                        'md5': hashlib.md5(chunk).hexdigest(),
+                        'origins': [chunk_uri]
+                    }
+                )
                 bytes_uploaded += len(chunk)
             except TrottlingException:
                 print('Hit rate limit for {} provider: entering trottling mode and retrying with another provider...'.format(
                     provider.nice_name()))
                 provider_trottling[provider.nice_name()] = int(time.time())
                 continue
-        print('Uploaded {} chunks.'.format(len(chunks_uris)))
+        print('Uploaded {} chunks.'.format(len(chunks)))
 
-        c = Manifest(chunks_uris, args.filename)
+        c = Manifest(chunks, args.filename)
         print('Generating chop file...')
         c.persist()
         print('Chop file generated: {} ({})'.format(
@@ -76,11 +81,16 @@ class Command():
 
         print('Chop will merge {} chunks'.format(len(c.chunks)))
         chunk_data = []
-        for uri in c.chunks:
-            provider = Storage.get_provider(uri)
-            print('Downloading chunk {} using {} provider...'.format(
-                len(chunk_data)+1, provider.nice_name()), end='\r')
-            chunk_data.append(provider.download(uri))
+        for chunk in c.chunks:
+            for chunk_uri in chunk['origins']:
+                provider = Storage.get_provider(chunk_uri)
+                print('Downloading chunk {} using {} provider...'.format(
+                    len(chunk_data)+1, provider.nice_name()), end='\r')
+                chunk_content = provider.download(chunk_uri)
+                if hashlib.md5(chunk_content).hexdigest() != chunk['md5']:
+                    print('Chunk is corrupted: going to fetch from next origin.')
+                    continue
+                chunk_data.append(chunk_content)
         Knife.merge(chunk_data, c.filename)
         print('Rebuilt original file into: {} ({})'.format(
             c.filename, Command._nice_size_filename(c.filename)))
