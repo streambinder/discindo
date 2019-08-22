@@ -68,4 +68,4 @@ class Rentry(Provider):
 
     @staticmethod
     def download(uri):
-        return requests.get('{}/raw'.format(uri)).text
+        return requests.get('{}/raw'.format(uri)).text.encode()

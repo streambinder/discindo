@@ -24,10 +24,12 @@ class Provider(abc.ABC):
 
     @abstatic
     def upload(content):
+        # content type is bytes
         return None
 
     @abstatic
     def download(uri):
+        # returning value type is bytes
         return None
 
 class TrottlingException(Exception):
