@@ -19,7 +19,9 @@ class Command():
     def chop():
         parser = Command.args_parser()
         parser.add_argument(
-            'filename', help='Generate chop for this file', type=str)
+            'filename', type=str, help='Generate chop for this file')
+        parser.add_argument(
+            '-r', type=int, metavar='<value>', default=1, help='Set redundancy level (how many providers get used per chunk)')
         args = parser.parse_args()
 
         print('Going to chop file: {} ({})'.format(
@@ -40,8 +42,8 @@ class Command():
             if chunk is None:
                 break
 
-            print('[{}] Uploading chunk {} using {} provider...'.format(Command._nice_size_value(bytes_uploaded + provider.max_chunk_size()),
-                                                                        len(chunks)+1, provider.nice_name()), end='\r')
+            print('[{}] Uploading {} on {}...'.format(Command._nice_size_value(bytes_uploaded),
+                                                      Command._nice_size_value(len(chunk)), provider.nice_name()), end='\r', flush=True)
 
             try:
                 chunk_uri = provider.upload(chunk)
@@ -63,7 +65,7 @@ class Command():
         print('Uploaded {} chunks.'.format(len(chunks)))
 
         c = Manifest(chunks, args.filename)
-        print('Generating chop file...')
+        print('Generating chop file...', end='\r')
         c.persist()
         print('Chop file generated: {} ({})'.format(
             c.filename_chop(), Command._nice_size_filename(c.filename_chop())))
@@ -101,6 +103,8 @@ class Command():
 
     @staticmethod
     def _nice_size_value(value, suffix='B'):
+        if value == 0:
+            return '0.0B'
         magnitude = int(math.floor(math.log(value, 1024)))
         val = value / math.pow(1024, magnitude)
         if magnitude > 7:
