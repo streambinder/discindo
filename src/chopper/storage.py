@@ -55,11 +55,22 @@ class Storage():
         return None
 
     @staticmethod
-    def random_provider():
+    def random_provider(size = 1):
+        providers = set()
         while True:
             provider = random.choice(Storage.get_providers())
             try:
                 provider()
-                return provider
+                providers.add(provider)
+                if len(providers) == size:
+                    return providers
             except:
                 pass
+
+    @staticmethod
+    def providers_chunk_size(providers):
+        size = None
+        for provider in providers:
+            if size is None or provider.max_chunk_size() < size:
+                size = provider.max_chunk_size()
+        return size

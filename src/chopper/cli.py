@@ -24,44 +24,56 @@ class Command():
             '-r', type=int, metavar='<value>', default=1, help='Set redundancy level (how many providers get used per chunk)')
         args = parser.parse_args()
 
-        print('Going to chop file: {} ({})'.format(
-            args.filename, Command._nice_size_filename(args.filename)))
+        if args.r > len(Storage.get_providers()):
+            print('Maximum redundancy level is {}: lowering it down.'.format(
+                len(Storage.get_providers())))
+            args.r = len(Storage.get_providers())
+
+        print('Going to chop file {} ({}) with level {} redundancy'.format(
+            args.filename, Command._nice_size_filename(args.filename), args.r))
         knife = Knife(args.filename)
 
-        bytes_uploaded = 0
         chunks = []
-        provider_trottling = dict()
+        bytes_uploaded = 0
+        # TODO: add back trottling
+        # provider_trottling = dict()
         while True:
-            provider = Storage.random_provider()
-            if provider.nice_name() in provider_trottling.keys() and int(time.time()) - provider_trottling[provider.nice_name()] < provider.trottle():
-                print('Provider {} is trottling: retrying later...'.format(
-                    provider.nice_name()))
-                continue
-
-            chunk = knife.chop(provider.max_chunk_size())
+            providers = Storage.random_provider(size=args.r)
+            chunk_size = Storage.providers_chunk_size(providers)
+            chunk_uris = []
+            chunk = knife.chop(chunk_size)
             if chunk is None:
                 break
 
-            print('[{}] Uploading {} on {}...'.format(Command._nice_size_value(bytes_uploaded),
-                                                      Command._nice_size_value(len(chunk)), provider.nice_name()), end='\r', flush=True)
+            for p in providers:
+                # while p.nice_name() in provider_trottling.keys() and int(time.time()) - provider_trottling[p.nice_name()] < p.trottle():
+                #     print('Provider {} is trottling: retrying later...'.format(
+                #         p.nice_name()), end='\r', flush=True)
+                #     time.sleep(1)
 
-            try:
-                chunk_uri = provider.upload(chunk)
-                if chunk_uri is None:
-                    print('Unable to upload chunk: retrying...')
+                print('[{}] Uploading {} on {}...'.format(Command._nice_size_value(bytes_uploaded),
+                                                          Command._nice_size_value(len(chunk)), p.nice_name()), end='\r', flush=True)
+
+                # try:
+                chunk_uri = p.upload(chunk)
+                while chunk_uri is None:
+                    print('Unable to upload chunk: retrying...',  end='\r')
                     continue
-                chunks.append(
-                    {
-                        'md5': hashlib.md5(chunk).hexdigest(),
-                        'origins': [chunk_uri]
-                    }
-                )
-                bytes_uploaded += len(chunk)
-            except TrottlingException:
-                print('Hit rate limit for {} provider: entering trottling mode and retrying with another provider...'.format(
-                    provider.nice_name()))
-                provider_trottling[provider.nice_name()] = int(time.time())
-                continue
+                chunk_uris.append(chunk_uri)
+                # except TrottlingException:
+                #     print('Hit rate limit for {} provider: entering trottling mode and retrying with another provider...'.format(
+                #         p.nice_name()))
+                #     provider_trottling[p.nice_name()] = int(time.time())
+                #     continue
+
+            bytes_uploaded += len(chunk)
+            chunks.append(
+                {
+                    'md5': hashlib.md5(chunk).hexdigest(),
+                    'origins': chunk_uris
+                }
+            )
+
         print('Uploaded {} chunks.'.format(len(chunks)))
 
         c = Manifest(chunks, args.filename)
@@ -92,7 +104,9 @@ class Command():
                 if hashlib.md5(chunk_content).hexdigest() != chunk['md5']:
                     print('Chunk is corrupted: going to fetch from next origin.')
                     continue
-                chunk_data.append(chunk_content)
+                else:
+                    chunk_data.append(chunk_content)
+                    break
         Knife.merge(chunk_data, c.filename)
         print('Rebuilt original file into: {} ({})'.format(
             c.filename, Command._nice_size_filename(c.filename)))
