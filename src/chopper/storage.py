@@ -55,7 +55,7 @@ class Storage():
         return None
 
     @staticmethod
-    def random_provider(size = 1):
+    def random_provider(size=1):
         providers = set()
         while True:
             provider = random.choice(Storage.get_providers())
@@ -63,7 +63,7 @@ class Storage():
                 provider()
                 providers.add(provider)
                 if len(providers) == size:
-                    return providers
+                    return list(providers)
             except:
                 pass
 

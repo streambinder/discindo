@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import math
 import os
+import sys
 import time
 
 from .chop import Knife, Manifest
@@ -35,36 +36,38 @@ class Command():
 
         chunks = []
         bytes_uploaded = 0
-        # TODO: add back trottling
-        # provider_trottling = dict()
+        trottling = dict()
         while True:
             providers = Storage.random_provider(size=args.r)
             chunk_size = Storage.providers_chunk_size(providers)
             chunk_uris = []
             chunk = knife.chop(chunk_size)
+
             if chunk is None:
                 break
 
-            for p in providers:
-                # while p.nice_name() in provider_trottling.keys() and int(time.time()) - provider_trottling[p.nice_name()] < p.trottle():
-                #     print('Provider {} is trottling: retrying later...'.format(
-                #         p.nice_name()), end='\r', flush=True)
-                #     time.sleep(1)
+            p_index = 0
+            while p_index < len(providers):
+                p = providers[p_index]
+
+                while p.nice_name() in trottling.keys() and int(time.time()) - trottling[p.nice_name()] < p.trottle():
+                    print('Provider {} is trottling: retrying later...'.format(
+                        p.nice_name()), end='\r', flush=True)
+                    time.sleep(1)
 
                 print('[{}] Uploading {} on {}...'.format(Command._nice_size_value(bytes_uploaded),
                                                           Command._nice_size_value(len(chunk)), p.nice_name()), end='\r', flush=True)
 
-                # try:
-                chunk_uri = p.upload(chunk)
-                while chunk_uri is None:
-                    print('Unable to upload chunk: retrying...',  end='\r')
+                try:
+                    chunk_uri = p.upload(chunk)
+                    while chunk_uri is None:
+                        print('Unable to upload chunk: retrying...',  end='\r')
+                        continue
+                    chunk_uris.append(chunk_uri)
+                    p_index += 1
+                except TrottlingException:
+                    trottling[p.nice_name()] = int(time.time())
                     continue
-                chunk_uris.append(chunk_uri)
-                # except TrottlingException:
-                #     print('Hit rate limit for {} provider: entering trottling mode and retrying with another provider...'.format(
-                #         p.nice_name()))
-                #     provider_trottling[p.nice_name()] = int(time.time())
-                #     continue
 
             bytes_uploaded += len(chunk)
             chunks.append(
