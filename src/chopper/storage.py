@@ -34,7 +34,16 @@ class Storage():
                         'chopper.providers.{}'.format(f.replace('.py', '')))
         except:
             pass
-        Storage.providers = Provider.__subclasses__()
+
+        Storage.providers = list()
+        for provider in Provider.__subclasses__():
+            try:
+                if provider.enabled():
+                    provider()
+                    Storage.providers.append(provider)
+            except:
+                pass
+
         return Storage.providers
 
     @staticmethod
@@ -60,7 +69,6 @@ class Storage():
         while True:
             provider = random.choice(Storage.get_providers())
             try:
-                provider()
                 providers.add(provider)
                 if len(providers) == size:
                     return list(providers)

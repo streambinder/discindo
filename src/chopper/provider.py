@@ -7,6 +7,10 @@ from .annotations import abstatic
 class Provider(abc.ABC):
 
     @abstatic
+    def enabled():
+        return False
+
+    @abstatic
     def nice_name():
         return None
 
@@ -16,11 +20,11 @@ class Provider(abc.ABC):
 
     @abstatic
     def max_chunk_size():
-        return 0 # kbyte(s)
-    
+        return 0  # kbyte(s)
+
     @abstatic
     def trottle():
-        return 0 # second(s)
+        return 0  # second(s)
 
     @abstatic
     def upload(content):
@@ -31,6 +35,7 @@ class Provider(abc.ABC):
     def download(uri):
         # returning value type is bytes
         return None
+
 
 class TrottlingException(Exception):
     pass

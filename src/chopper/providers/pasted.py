@@ -19,6 +19,10 @@ class Pasted(Provider):
         WEBSITE)
 
     @staticmethod
+    def enabled():
+        return True
+
+    @staticmethod
     def nice_name():
         return Pasted.DOMAIN
 

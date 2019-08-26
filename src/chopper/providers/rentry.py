@@ -17,6 +17,10 @@ class Rentry(Provider):
     REGEX_HITLIMIT = r'<.*-error.*You have hit the limit, please wait a bit.*>'
 
     @staticmethod
+    def enabled():
+        return True
+
+    @staticmethod
     def nice_name():
         return Rentry.DOMAIN
 
