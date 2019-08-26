@@ -26,11 +26,11 @@ class Command():
         args = parser.parse_args()
 
         if args.r > len(Storage.get_providers()):
-            print('Maximum redundancy level is {}: lowering it down.'.format(
+            Command.print('Maximum redundancy level is {}: lowering it down.'.format(
                 len(Storage.get_providers())))
             args.r = len(Storage.get_providers())
 
-        print('Going to chop file {} ({}) with level {} redundancy'.format(
+        Command.print('Going to chop file {} ({}) with level {} redundancy'.format(
             args.filename, Command._nice_size_filename(args.filename), args.r))
         knife = Knife(args.filename)
 
@@ -51,17 +51,18 @@ class Command():
                 p = providers[p_index]
 
                 while p.nice_name() in trottling.keys() and int(time.time()) - trottling[p.nice_name()] < p.trottle():
-                    print('Provider {} is trottling: retrying later...'.format(
-                        p.nice_name()), end='\r', flush=True)
+                    Command.print('Provider {} is trottling: retrying later...'.format(
+                        p.nice_name()), rev=True)
                     time.sleep(1)
 
-                print('[{}] Uploading {} on {}...'.format(Command._nice_size_value(bytes_uploaded),
-                                                          Command._nice_size_value(len(chunk)), p.nice_name()), end='\r', flush=True)
+                Command.print('[{}] Uploading {} on {}...'.format(Command._nice_size_value(bytes_uploaded),
+                                                                  Command._nice_size_value(len(chunk)), p.nice_name()), rev=True)
 
                 try:
                     chunk_uri = p.upload(chunk)
                     while chunk_uri is None:
-                        print('Unable to upload chunk: retrying...',  end='\r')
+                        Command.print(
+                            'Unable to upload chunk: retrying...',  rev=True)
                         continue
                     chunk_uris.append(chunk_uri)
                     p_index += 1
@@ -77,12 +78,12 @@ class Command():
                 }
             )
 
-        print('Uploaded {} chunks.'.format(len(chunks)))
+        Command.print('Uploaded {} chunks.'.format(len(chunks)))
 
         c = Manifest(chunks, args.filename)
-        print('Generating chop file...', end='\r')
+        Command.print('Generating chop file...', rev=True)
         c.persist()
-        print('Chop file generated: {} ({})'.format(
+        Command.print('Chop file generated: {} ({})'.format(
             c.filename_chop(), Command._nice_size_filename(c.filename_chop())))
 
     @staticmethod
@@ -92,26 +93,27 @@ class Command():
             'filename', help='Rebuild file using this chop file', type=str)
         args = parser.parse_args()
 
-        print('Going to rebuild chop file: {} ({})'.format(
+        Command.print('Going to rebuild chop file: {} ({})'.format(
             args.filename, Command._nice_size_filename(args.filename)))
         c = Manifest.unpersist(args.filename)
 
-        print('Chop will merge {} chunks'.format(len(c.chunks)))
+        Command.print('Chop will merge {} chunks'.format(len(c.chunks)))
         chunk_data = []
         for chunk in c.chunks:
             for chunk_uri in chunk['origins']:
                 provider = Storage.get_provider(chunk_uri)
-                print('Downloading chunk {} using {} provider...'.format(
-                    len(chunk_data)+1, provider.nice_name()), end='\r')
+                Command.print('Downloading chunk {} using {} provider...'.format(
+                    len(chunk_data)+1, provider.nice_name()), rev=True)
                 chunk_content = provider.download(chunk_uri)
                 if hashlib.md5(chunk_content).hexdigest() != chunk['md5']:
-                    print('Chunk is corrupted: going to fetch from next origin.')
+                    Command.print(
+                        'Chunk is corrupted: going to fetch from next origin.')
                     continue
                 else:
                     chunk_data.append(chunk_content)
                     break
         Knife.merge(chunk_data, c.filename)
-        print('Rebuilt original file into: {} ({})'.format(
+        Command.print('Rebuilt original file into: {} ({})'.format(
             c.filename, Command._nice_size_filename(c.filename)))
 
     @staticmethod
@@ -127,3 +129,11 @@ class Command():
         if magnitude > 7:
             return '{:.1f}{}{}'.format(val, 'Yi', suffix)
         return '{:3.1f}{}{}'.format(val, ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'][magnitude], suffix)
+
+    @staticmethod
+    def print(*print_args, rev=False):
+        sys.stdout.write('\033[2K\033[1G')
+        if rev:
+            print(*print_args, end='\r')
+        else:
+            print(*print_args)
