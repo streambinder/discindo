@@ -18,7 +18,8 @@ class Rentry(Provider):
 
     @staticmethod
     def enabled():
-        return True
+        # disable as not well performing
+        return False
 
     @staticmethod
     def nice_name():
