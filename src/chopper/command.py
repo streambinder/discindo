@@ -6,6 +6,7 @@ import sys
 import time
 
 from .chop import Knife, Manifest
+from .filesystem import guess_binary
 from .provider import TrottlingException
 from .storage import Storage
 
