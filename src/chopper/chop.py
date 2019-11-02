@@ -8,34 +8,47 @@ class Knife():
 
     def __init__(self, filename):
         self.filename = filename
-        self.source = open(filename, 'rb')
+        self.source = open(filename.base(), 'rb')
         self.source_offset = 0
 
     def chop(self, size):
         size *= 1024
+        self.source.seek(self.source_offset)
+
+        if self.filename.binary:
+            return self._chop_binary(size)
+
+        chunk = self.source.read(size)
+        self.source_offset += size
+        return chunk if chunk != b'' else None
+
+    def _chop_binary(self, size):
         # the following calculation depends on encoding algorithm
         # base85 encoding always returns a payload which is 5 to 4
         # in proportion with the original payload
         size = math.floor(size / 5 * 4)
-        self.source.seek(self.source_offset)
         chunk = base64.b85encode(self.source.read(size))
         self.source_offset += size
         return chunk if chunk != b'' else None
 
     @staticmethod
-    def merge(chunks, filename):
+    def merge(chunks, filename, binary):
         with open(filename, 'wb+') as fname:
             for chunk in chunks:
-                fname.write(base64.b85decode(chunk))
+                if binary:
+                    fname.write(base64.b85decode(chunk))
+                else:
+                    fname.write(chunk)
 
 
 class Manifest():
 
     EXTENSION = 'chop'
 
-    def __init__(self, chunks, filename):
+    def __init__(self, chunks, filename, binary):
         self.chunks = chunks
         self.filename = filename
+        self.binary = binary
 
     def filename_chop(self):
         return '{}.{}'.format(os.path.splitext(self.filename)[0], Manifest.EXTENSION)

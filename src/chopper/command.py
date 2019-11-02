@@ -41,7 +41,7 @@ class Command():
 
         Command.print('Going to chop file {} ({}) with level {} redundancy'.format(
             args.filename.base(), Command._nice_size_filename(args.filename.base()), args.r))
-        knife = Knife(args.filename.base())
+        knife = Knife(args.filename)
 
         chunks = []
         bytes_uploaded = 0
@@ -89,7 +89,7 @@ class Command():
 
         Command.print('Uploaded {} chunks.'.format(len(chunks)))
 
-        c = Manifest(chunks, args.filename.base())
+        c = Manifest(chunks, args.filename.base(), args.filename.binary)
         Command.print('Generating chop file...', rev=True)
         c.persist()
         Command.print('Chop file generated: {} ({})'.format(
@@ -128,7 +128,7 @@ class Command():
                 else:
                     chunk_data.append(chunk_content)
                     break
-        Knife.merge(chunk_data, c.filename)
+        Knife.merge(chunk_data, c.filename, c.binary)
         Command.print('Rebuilt original file into: {} ({})'.format(
             c.filename, Command._nice_size_filename(c.filename)))
 
