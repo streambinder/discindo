@@ -5,10 +5,10 @@ from html.parser import HTMLParser
 from ..provider import Provider
 
 
-class Pasted(Provider):
+class ControlC(Provider):
 
-    PROTOCOL = "http"
-    DOMAIN = "pasted.co"
+    PROTOCOL = "https"
+    DOMAIN = "controlc.com"
     WEBSITE = "{}://{}".format(PROTOCOL, DOMAIN)
 
     REGEX_URL = r'^{}/([a-zA-Z0-9]+)$'.format(WEBSITE)
@@ -24,11 +24,11 @@ class Pasted(Provider):
 
     @staticmethod
     def nice_name():
-        return Pasted.DOMAIN
+        return ControlC.DOMAIN
 
     @staticmethod
     def is_supporting(uri):
-        return re.search(Pasted.REGEX_URL, uri) is not None
+        return re.search(ControlC.REGEX_URL, uri) is not None
 
     @staticmethod
     def max_chunk_size():
@@ -40,15 +40,15 @@ class Pasted(Provider):
 
     @staticmethod
     def upload(content):
-        request = requests.get(Pasted.WEBSITE)
+        request = requests.get(ControlC.WEBSITE)
         request_timestamp_r = re.search(
-            Pasted.REGEX_TIMESTAMP, request.text)
+            ControlC.REGEX_TIMESTAMP, request.text)
         if request_timestamp_r is None:
             print('Timestamp not found')
             return None
 
         request = requests.post(
-            '{}/index.php?act=submit'.format(Pasted.WEBSITE), data={
+            '{}/index.php?act=submit'.format(ControlC.WEBSITE), data={
                 'antispam': '1',
                 'paste_title': 'test',
                 'input_text': content,
@@ -57,12 +57,12 @@ class Pasted(Provider):
                 # 'paste_password': '',
             }, headers={
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'Referer': Pasted.WEBSITE,
+                'Referer': ControlC.WEBSITE,
                 'Accept-Encoding': 'gzip, deflate',
             }
         )
         response_match = re.search(
-            Pasted.REGEX_URL_UPLOAD, request.text)
+            ControlC.REGEX_URL_UPLOAD, request.text)
         if response_match is None:
             print('Paste ID not found')
             return None
@@ -71,30 +71,30 @@ class Pasted(Provider):
 
     @staticmethod
     def download(uri):
-        uri_r = re.search(Pasted.REGEX_URL, uri)
+        uri_r = re.search(ControlC.REGEX_URL, uri)
         if uri_r is None:
             print('Paste URI unrecognized')
             return
 
         request = requests.get(uri)
         request_hash_r = re.search(
-            Pasted.REGEX_PASTE_HASH, request.text)
+            ControlC.REGEX_PASTE_HASH, request.text)
         if request_hash_r is None:
             print('Paste hash not found')
             return None
 
         request = requests.get('{}/{}/fullscreen.php?hash={}'.format(
-            Pasted.WEBSITE, uri_r.group(1), request_hash_r.group(1)))
-        p = PastedChunkParser()
+            ControlC.WEBSITE, uri_r.group(1), request_hash_r.group(1)))
+        p = ControlCChunkParser()
         p.feed(request.text)
         p.close()
 
         return p.paste_value.encode()
 
 
-class PastedChunkParser(HTMLParser):
+class ControlCChunkParser(HTMLParser):
     def __init__(self):
-        super(PastedChunkParser, self).__init__()
+        super(ControlCChunkParser, self).__init__()
         self.paste_started = False
         self.paste_value = ''
 
