@@ -7,6 +7,7 @@ import sys
 import time
 
 from .chop import Knife, Manifest
+from .filesystem import File
 from .provider import TrottlingException
 from .storage import Storage
 
@@ -30,8 +31,8 @@ class Command():
             Command.print("File {} does not exist.".format(args.filename))
             sys.exit(1)
 
-        os.chdir(os.path.dirname(args.filename))
-        args.filename = ntpath.basename(args.filename)
+        args.filename = File(args.filename)
+        os.chdir(args.filename.dir())
 
         if args.r > len(Storage.get_providers()):
             Command.print('Maximum redundancy level is {}: lowering it down.'.format(
@@ -39,8 +40,8 @@ class Command():
             args.r = len(Storage.get_providers())
 
         Command.print('Going to chop file {} ({}) with level {} redundancy'.format(
-            args.filename, Command._nice_size_filename(args.filename), args.r))
-        knife = Knife(args.filename)
+            args.filename.base(), Command._nice_size_filename(args.filename.base()), args.r))
+        knife = Knife(args.filename.base())
 
         chunks = []
         bytes_uploaded = 0
@@ -88,7 +89,7 @@ class Command():
 
         Command.print('Uploaded {} chunks.'.format(len(chunks)))
 
-        c = Manifest(chunks, args.filename)
+        c = Manifest(chunks, args.filename.base())
         Command.print('Generating chop file...', rev=True)
         c.persist()
         Command.print('Chop file generated: {} ({})'.format(
@@ -105,12 +106,12 @@ class Command():
             Command.print("File {} does not exist.".format(args.filename))
             sys.exit(1)
 
-        os.chdir(os.path.dirname(args.filename))
-        args.filename = ntpath.basename(args.filename)
+        args.filename = File(args.filename)
+        os.chdir(args.filename.dir())
 
         Command.print('Going to rebuild chop file: {} ({})'.format(
-            args.filename, Command._nice_size_filename(args.filename)))
-        c = Manifest.unpersist(args.filename)
+            args.filename.base(), Command._nice_size_filename(args.filename.base())))
+        c = Manifest.unpersist(args.filename.base())
 
         Command.print('Chop will merge {} chunks'.format(len(c.chunks)))
         chunk_data = []
