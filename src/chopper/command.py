@@ -1,12 +1,12 @@
 import argparse
 import hashlib
 import math
+import ntpath
 import os
 import sys
 import time
 
 from .chop import Knife, Manifest
-from .filesystem import guess_binary
 from .provider import TrottlingException
 from .storage import Storage
 
@@ -25,6 +25,13 @@ class Command():
         parser.add_argument(
             '-r', type=int, metavar='<value>', default=1, help='Set redundancy level (how many providers get used per chunk)')
         args = parser.parse_args()
+
+        if not os.path.isfile(args.filename):
+            Command.print("File {} does not exist.".format(args.filename))
+            sys.exit(1)
+
+        os.chdir(os.path.dirname(args.filename))
+        args.filename = ntpath.basename(args.filename)
 
         if args.r > len(Storage.get_providers()):
             Command.print('Maximum redundancy level is {}: lowering it down.'.format(
@@ -93,6 +100,13 @@ class Command():
         parser.add_argument(
             'filename', help='Rebuild file using this chop file', type=str)
         args = parser.parse_args()
+
+        if not os.path.isfile(args.filename):
+            Command.print("File {} does not exist.".format(args.filename))
+            sys.exit(1)
+
+        os.chdir(os.path.dirname(args.filename))
+        args.filename = ntpath.basename(args.filename)
 
         Command.print('Going to rebuild chop file: {} ({})'.format(
             args.filename, Command._nice_size_filename(args.filename)))

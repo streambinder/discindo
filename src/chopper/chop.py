@@ -1,6 +1,7 @@
 import base64
 import json
 import math
+import ntpath
 import os
 
 
@@ -35,7 +36,7 @@ class Manifest():
 
     def __init__(self, chunks, filename):
         self.chunks = chunks
-        self.filename = filename
+        self.filename = ntpath.basename(filename)
 
     def filename_chop(self):
         return '{}.{}'.format(os.path.splitext(self.filename)[0], Manifest.EXTENSION)
