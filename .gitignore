@@ -1,3 +1,6 @@
 bin
 .vscode
+zeus/data.yml
+zeus/dumps
+zeus/.historys
 __pycache__
