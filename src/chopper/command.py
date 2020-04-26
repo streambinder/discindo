@@ -8,7 +8,7 @@ import time
 
 from .chop import Knife, Manifest
 from .filesystem import File
-from .provider import TrottlingException
+from .provider import ThrottlingException
 from .storage import Storage
 
 
@@ -45,7 +45,7 @@ class Command():
 
         chunks = []
         bytes_uploaded = 0
-        trottling = dict()
+        throttling = dict()
         while True:
             providers = Storage.random_provider(size=args.r)
             chunk_size = Storage.providers_chunk_size(providers)
@@ -59,8 +59,8 @@ class Command():
             while p_index < len(providers):
                 p = providers[p_index]
 
-                while p.nice_name() in trottling.keys() and int(time.time()) - trottling[p.nice_name()] < p.trottle():
-                    Command.print('Provider {} is trottling: retrying later...'.format(
+                while p.nice_name() in throttling.keys() and int(time.time()) - throttling[p.nice_name()] < p.throttle():
+                    Command.print('Provider {} is throttling: retrying later...'.format(
                         p.nice_name()), rev=True)
                     time.sleep(1)
 
@@ -75,8 +75,8 @@ class Command():
                         continue
                     chunk_uris.append(chunk_uri)
                     p_index += 1
-                except TrottlingException:
-                    trottling[p.nice_name()] = int(time.time())
+                except ThrottlingException:
+                    throttling[p.nice_name()] = int(time.time())
                     continue
 
             bytes_uploaded += len(chunk)

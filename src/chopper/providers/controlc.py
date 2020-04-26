@@ -35,7 +35,7 @@ class ControlC(Provider):
         return 512
 
     @staticmethod
-    def trottle():
+    def throttle():
         return 0
 
     @staticmethod

@@ -4,7 +4,7 @@ from html.parser import HTMLParser
 
 import requests
 
-from ..provider import Provider, TrottlingException
+from ..provider import Provider, ThrottlingException
 
 
 class Rentry(Provider):
@@ -34,7 +34,7 @@ class Rentry(Provider):
         return 128
 
     @staticmethod
-    def trottle():
+    def throttle():
         return 30
 
     @staticmethod
@@ -67,7 +67,7 @@ class Rentry(Provider):
         if request.status_code != 200:
             return None
         elif re.search(Rentry.REGEX_HITLIMIT, request.text) is not None:
-            raise TrottlingException()
+            raise ThrottlingException()
 
         return request.url
 

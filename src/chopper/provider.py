@@ -23,7 +23,7 @@ class Provider(abc.ABC):
         return 0  # kbyte(s)
 
     @abstatic
-    def trottle():
+    def throttle():
         return 0  # second(s)
 
     @abstatic
@@ -37,5 +37,5 @@ class Provider(abc.ABC):
         return None
 
 
-class TrottlingException(Exception):
+class ThrottlingException(Exception):
     pass

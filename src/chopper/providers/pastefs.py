@@ -36,7 +36,7 @@ class PasteFS(Provider):
         return 8 * 1024
 
     @staticmethod
-    def trottle():
+    def throttle():
         return 0
 
     @staticmethod
