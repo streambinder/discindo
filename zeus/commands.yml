@@ -1,34 +1,17 @@
 language: bash
 
-globals:
-    bin_name: chopper
-    build_dir: bin
-    version: 1
-
 commands:
-
-    setup:
-        description: Setup environment
-        exec: mkdir -p ${build_dir}
 
     clean:
         description: Clean up
-        exec: rm -rf ${build_dir}
+        exec: python3 setup.py clean --all
 
     install:
         description: Install binary
         dependencies:
-            - setup
             - build
-        exec: install -m 00755 ${build_dir}/${bin_name} /usr/local/sbin/
+        exec: python3 setup.py install
 
     build:
         description: Build binary
-        dependencies:
-            - setup
-
-    release:
-        description: Release binary
-        dependencies:
-            - build
-        exec: cp -f ${build_dir}/${bin_name}{,-v${version}}
+        exec: sudo python3 setup.py build
