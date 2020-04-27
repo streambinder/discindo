@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Chopper',
-    version='1',
+    version='2',
     # package_dir={'': 'chopper'},
     # packages=find_namespace_packages(where='chopper'),
     packages=find_packages(),
