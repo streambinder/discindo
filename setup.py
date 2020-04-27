@@ -1,12 +1,13 @@
 #!/bin/env python3
 
-from setuptools import setup, find_namespace_packages
+from setuptools import setup, find_packages
 
 setup(
     name='Chopper',
     version='1',
-    package_dir={'': 'src'},
-    packages=find_namespace_packages(where='src'),
+    # package_dir={'': 'chopper'},
+    # packages=find_namespace_packages(where='chopper'),
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'chopper = chopper.__main__:main'
