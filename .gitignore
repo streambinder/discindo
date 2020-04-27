@@ -1,4 +1,6 @@
-bin
+chopper/Chopper.egg-info
+Chopper.egg-info
+dist
 .vscode
 zeus/data.yml
 zeus/dumps
