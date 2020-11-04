@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Discindo',
-    version='3',
+    version='4',
     # package_dir={'': 'discindo'},
     # packages=find_namespace_packages(where='discindo'),
     packages=find_packages(),
