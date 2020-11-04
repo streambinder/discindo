@@ -31,7 +31,7 @@ class Storage():
             for f in listdir(providers_path):
                 if re.search(r'^(?!__).*\.py$', f) is not None:
                     importlib.import_module(
-                        'chopper.providers.{}'.format(f.replace('.py', '')))
+                        'discindo.providers.{}'.format(f.replace('.py', '')))
         except:
             pass
 
